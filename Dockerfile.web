@@ -1,0 +1,30 @@
+FROM ubuntu:22.04
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV DEBIAN_FRONTEND=noninteractive
+# Set the working directory in the container
+WORKDIR /app
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 \
+    python3-pip \
+    ffmpeg \
+    libstdc++6 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+# Install Python dependencies
+COPY requirements.txt /app/
+RUN pip3 install --no-cache-dir -r requirements.txt
+# Create directories for temporary files and set correct ownership and permissions
+RUN mkdir -p /app/temp/input /app/temp/output \
+    && chown -R root:root /app/temp \
+    && chmod -R 755 /app/temp
+# Copy the application code
+COPY . /app
+# Expose the Flask app port
+EXPOSE 5000
+# Run the app with Gunicorn
+CMD ["gunicorn", "--workers", "4", "--bind", "0.0.0.0:5000", "--timeout", "120", "app:app"]
+
+

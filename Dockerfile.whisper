@@ -1,0 +1,47 @@
+# Use Ubuntu 22.04 as the base image
+FROM ubuntu:22.04
+
+# Set working directory
+WORKDIR /usr/local/src
+
+# Install necessary dependencies
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    bash \
+    git \
+    make \
+    g++ \
+    ffmpeg \
+    wget \
+    curl \
+    libstdc++6 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Clone whisper.cpp repository
+RUN git clone https://github.com/ggerganov/whisper.cpp.git -b v1.7.1 --depth 1
+
+# Set working directory to whisper.cpp
+WORKDIR /usr/local/src/whisper.cpp
+
+# Download the medium English model
+RUN bash ./models/download-ggml-model.sh medium
+
+# Build whisper.cpp
+RUN make
+
+# Cleanup after build
+RUN apt-get purge -y --auto-remove git make g++ \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
+    && rm -rf .git examples samples tests \
+    && find . -name "*.o" -type f -delete \
+    && find . -name "*.c" -type f -delete \
+    && find . -name "*.cpp" -type f -delete \
+    && find . -name "*.h" -type f ! -name "whisper.h" -delete
+
+# Create a script to keep the container running
+RUN echo '#!/bin/bash' > /usr/local/bin/keep_alive.sh \
+    && echo 'while true; do sleep 1000; done' >> /usr/local/bin/keep_alive.sh \
+    && chmod +x /usr/local/bin/keep_alive.sh
+
+# Set the entrypoint to the keep-alive script
+CMD ["/usr/local/bin/keep_alive.sh"]

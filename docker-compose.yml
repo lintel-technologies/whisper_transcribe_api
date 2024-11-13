@@ -1,0 +1,46 @@
+version: '3.8'
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
+      - whisper_build:/usr/local/src/whisper.cpp
+    environment:
+      FLASK_ENV: development
+      WHISPER_CPP_PATH: /usr/local/src/whisper.cpp/main
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      - whisper
+      - redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+  whisper:
+    build:
+      context: .
+      dockerfile: Dockerfile.whisper
+    volumes:
+      - whisper_build:/usr/local/src/whisper.cpp
+    restart: unless-stopped
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    command: redis-server --save 60 1 --loglevel warning
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  whisper_build:
+  redis_data:

@@ -1,0 +1,22 @@
+{
+  "allowed_formats": ["mp3", "wav", "ogg", "mp4", "m4a", "mkv"],
+  "max_file_size_mb": 100,
+  "ffmpeg_options": {
+    "sample_rate": 16000,
+    "channels": 1,
+    "audio_codec": "pcm_s16le"
+  },
+  "whisper_cpp_path": "/usr/local/src/whisper.cpp/main",
+  "ffmpeg_path": "/usr/bin/ffmpeg",
+  "temp_paths": {
+    "input": "/app/temp/input/",
+    "output": "/app/temp/output/"
+  },
+  "language": "auto",
+  "whisper_model": "/usr/local/src/whisper.cpp/models/ggml-medium.en.bin",
+  "logging_level": "INFO",
+  "rate_limit_per_minute": 50,
+  "api_key_required": true,
+  "api_keys": ["securepassword"],
+  "task_expiry": 3600
+}
